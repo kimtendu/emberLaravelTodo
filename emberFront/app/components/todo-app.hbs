@@ -1,0 +1,18 @@
+<ul>
+  {{#each @model as |item|}}
+  {{#if item.id}}
+  <li>{{item.todo}}</li>
+  <button onclick={{fn this.delete @model item}} type='button'>delete</button>
+  <form>
+    {{#if this.change}}
+    <input placeholder='edit' type='text' value={{@item.todo}} onchange={{fn this.onChange}} />
+    {{/if}}
+    <button onclick={{fn this.edit @model item}} type='submit'>edit</button>
+  </form>
+  {{/if}}
+  {{/each}}
+</ul>
+<form onsubmit={{fn this.submit @model}}>
+  <input placeholder='Add todo' type='text' value={{this.text.todo}} onchange={{fn this.onChange}} />
+  <button type='submit'>Add</button>
+</form>

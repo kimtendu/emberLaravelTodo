@@ -1,0 +1,71 @@
+version: "3.3"
+
+services:
+  nginx:
+    image: nginx:1.13-alpine
+    restart: unless-stopped
+    container_name: todolist-nginx
+    ports:
+      - "9002:80"
+    expose:
+      - "80"
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile-Nginx
+    volumes:
+      - ./laravel/:/var/www
+      - ./docker/run.sh:/var/www/run.sh
+      - ./docker/nginx/config/default.conf:/etc/nginx/conf.d/default.conf
+      - ./docker/nginx/config/nginx.conf:/etc/nginx/nginx.conf
+    tty: true
+    depends_on:
+      - todolist-laravel
+    networks:
+      - todolist-crm
+
+  todolist-laravel:
+    container_name: todolist-laravel
+    hostname: todolist-laravel
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    working_dir: /var/www
+    volumes:
+      - ./laravel/:/var/www
+      - ./docker/docker.dev.env:/var/www/.env
+      - ./docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+      - ./docker/run.sh:/var/www/run.sh
+    expose:
+      - "9000"
+    ports:
+      - "9000:9000"
+    networks:
+      - todolist-crm
+    depends_on:
+      - mysql
+      - redis
+    tty: true
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    networks:
+      - todolist-crm
+
+  mysql:
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./docker/mysql:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: laravel
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - todolist-crm
+
+networks:
+  todolist-crm:
+    driver: "bridge"
